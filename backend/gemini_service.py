@@ -2,10 +2,9 @@ import os
 from google import genai
 from google.genai import types
 
-# Kelas untuk menangani permintaan informasi menggunakan Gemini AI
 class GeminiExpert:
     def __init__(self, api_key: str):
-        self.client =
+        self.client = genai.Client(api_key=api_key)
 
     def get_insect_info(self, insect_name: str) -> str:
         prompt = f"""
@@ -21,22 +20,31 @@ class GeminiExpert:
         
         Berikan jawaban langsung tanpa basa-basi pengantar.
         """
-        
-        # Menyiapkan konten input untuk model AI
-        contents =
-                
-        # Konfigurasi proses generasi AI
-        generate_content_config = 
-        
-        # Menghasilkan respons secara streaming
-        untuk chunk in self.klien.models.generate_content_stream(
-            model="gemini-2.5-flash-lite", # Model version yang digunakan
-            contents=,config=,
+
+        contents = [
+            types.Content(
+                role="user",
+                parts=[types.Part(text=prompt)],
+            )
+        ]
+
+        generate_content_config = types.GenerateContentConfig(
+            thinking_config=types.ThinkingConfig(thinking_budget=512),
+            tools=[types.Tool(google_search=types.GoogleSearch())],
+            response_modalities=["TEXT"],
+        )
+
+        response_text = ""
+        for chunk in self.client.models.generate_content_stream(
+            model="gemini-2.5-flash-lite",
+            contents=contents,
+            config=generate_content_config,
         ):
-            # Menggabungkan setiap potongan teks respons
-            if text := cuk.ext:
+            if hasattr(chunk, 'candidates') and chunk.candidates:
+                for candidate in chunk.candidates:
+                    if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
+                        print("GOOGLE SEARCH AKTIF:", candidate.grounding_metadata)
+            if chunk.text:
+                response_text += chunk.text
 
-
-        # Mengembalikan hasil akhir respons AI   
-        return 
-
+        return response_text
